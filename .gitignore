@@ -1,0 +1,7 @@
+node_modules/
+doc.json
+dist/
+out/
+data/
+engine-home/
+*.log

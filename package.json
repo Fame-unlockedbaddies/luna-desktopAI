@@ -1,0 +1,91 @@
+{
+  "name": "luna-ai",
+  "version": "0.3.0",
+  "description": "Luna — open desktop AI coding agent built on OpenCode",
+  "main": "main.cjs",
+  "productName": "Luna",
+  "author": "Luna contributors",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --dir",
+    "engine": "node_modules/opencode-ai/bin/opencode.exe serve --port 4196 --hostname 127.0.0.1"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "opencode-ai": "^1.19.5"
+  },
+  "devDependencies": {
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0"
+  },
+  "allowScripts": {
+    "electron@45.3.2": true,
+    "opencode-ai@1.19.5": true
+  },
+  "build": {
+    "appId": "net.luna.desktop",
+    "productName": "Luna",
+    "copyright": "Copyright © 2026 Luna contributors",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "renderer/**",
+      "build/icon.png",
+      "luna-discord.json",
+      "luna-update.json",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/ffmpeg-static/ffmpeg.exe",
+        "to": "ffmpeg/ffmpeg.exe"
+      },
+      {
+        "from": "node_modules/opencode-ai/bin/opencode.exe",
+        "to": "engine/opencode.exe"
+      },
+      {
+        "from": "node_modules/opencode-ai/LICENSE",
+        "to": "engine/OPENCODE-LICENSE.txt"
+      },
+      {
+        "from": "build/luna-notify.wav",
+        "to": "sounds/luna-notify.wav"
+      },
+      {
+        "from": "luna-control.exe",
+        "to": "luna-control.exe"
+      },
+      {
+        "from": "luna-music.ps1",
+        "to": "music/luna-music.ps1"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "Luna-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Luna",
+      "uninstallDisplayName": "Luna"
+    },
+    "forceCodeSigning": false
+  }
+}
