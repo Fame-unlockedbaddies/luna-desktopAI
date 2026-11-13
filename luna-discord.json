@@ -1,0 +1,6 @@
+{
+  "clientId": "1570850681831563424",
+  "redirectUri": "http://127.0.0.1:45555/callback",
+  "scope": "identify",
+  "authorizeUrl": "https://discord.com/oauth2/authorize?client_id=1570850681831563424&response_type=token&redirect_uri=http%3A%2F%2F127.0.0.1%3A45555%2Fcallback&scope=identify"
+}
