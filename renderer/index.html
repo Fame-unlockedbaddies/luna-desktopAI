@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://cdn.discordapp.com; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luna</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="themes.css" />
+</head>
+<body>
+  <aside id="sidebar">
+    <div class="brand">LUNA<span class="brand-sub">desktop agent</span></div>
+    <button id="new-chat" class="primary">+ New chat</button>
+    <div class="side-label">Conversations</div>
+    <input id="session-search" class="session-search" type="text" placeholder="Search conversations…" autocomplete="off" spellcheck="false" />
+    <div id="session-list" class="session-list"></div>
+    <div class="side-footer">
+      <button id="open-settings" class="ghost">Settings</button>
+      <button id="choose-folder" class="ghost">Project folder…</button>
+    </div>
+  </aside>
+
+  <div id="auth-overlay" class="auth-overlay hidden" role="dialog" aria-modal="true" aria-label="Sign in">
+    <div class="auth-card">
+      <div class="auth-word">LUNA</div>
+      <p class="auth-sub">desktop coding agent</p>
+
+      <div class="auth-tabs" role="tablist">
+        <button id="tab-signin" class="auth-tab active" role="tab">Sign in</button>
+        <button id="tab-signup" class="auth-tab" role="tab">Sign up</button>
+      </div>
+
+      <form id="auth-form" class="auth-form" autocomplete="on">
+        <label><span id="auth-username-label">Username</span><input id="auth-username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" required /></label>
+        <label>Password<input id="auth-password" type="password" autocomplete="current-password" placeholder="at least 8 characters" required /></label>
+        <div id="auth-error" class="auth-error hidden"></div>
+      <p id="auth-hint" class="auth-hint hidden"></p>
+      <button id="auth-submit" type="submit" class="primary auth-submit">Sign in</button>
+      </form>
+
+      <button id="auth-toggle-config" class="ghost auth-config-toggle signup-only">Use your own Discord app (optional)</button>
+      <div id="auth-config-panel" class="auth-config hidden">
+        <label>Discord Client ID <input id="discord-client-id" autocomplete="off" spellcheck="false" placeholder="1234567890…" /></label>
+        <button id="save-auth-config" class="primary">Save config</button>
+        <p class="muted">Luna ships with its own Discord app (see <code>luna-discord.json</code>). Paste your own Client ID only if you want to run your own app — the registered redirect must stay <code>http://127.0.0.1:45555/callback</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+    <header id="topbar">
+      <div class="topbar-left">
+        <span id="engine-dot" class="dot"></span>
+        <span id="engine-status" class="muted">engine: starting…</span>
+      </div>
+      <div class="topbar-right">
+        <button id="studio-badge" class="studio-badge hidden" title="Connected to Roblox Studio — click to focus">
+          <img id="studio-icon" class="studio-icon" alt="Roblox Studio" />
+          <span class="studio-text">
+            <span class="studio-app">ROBLOX STUDIO</span>
+            <span id="studio-place" class="studio-place">—</span>
+          </span>
+        </button>
+        <button id="profile-chip" class="profile-chip hidden" title="Your Discord account">
+          <img id="profile-avatar" class="profile-avatar" alt="avatar" />
+          <span id="profile-name">@you</span>
+        </button>
+        <button id="topbar-logout" class="topbar-logout hidden" title="Sign out of Luna">Log out</button>
+        <code id="project-path" class="path">no project selected</code>
+      </div>
+    </header>
+
+    <section id="messages" aria-live="polite"></section>
+
+    <div id="typing" class="typing hidden" aria-hidden="true">
+      <span class="tdots"><i></i><i></i><i></i></span>
+      <span class="typing-text">Luna is thinking</span>
+    </div>
+
+    <div id="nowplaying" class="nowplaying hidden" aria-hidden="true">
+      <div id="np-disc" class="np-disc">♪</div>
+      <img id="np-art" class="np-art hidden" alt="album art" />
+      <div class="np-meta">
+        <div id="np-title" class="np-title">Nothing playing</div>
+        <div id="np-artist" class="np-artist">—</div>
+        <div id="np-source" class="np-source">—</div>
+      </div>
+      <div id="np-eq" class="np-eq paused" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <div id="composer">
+      <div id="model-menu" class="model-menu hidden" role="listbox"></div>
+      <div id="attachments" class="attachments hidden"></div>
+      <textarea id="input" rows="3" placeholder="Ask Luna to build, fix, refactor, explain… (Shift+Enter for a new line)"></textarea>
+      <div id="composer-bar">
+        <div class="composer-left">
+          <button id="attach-btn" class="attach-btn" title="Attach files Luna can read (scripts, notes, images, PDFs)" aria-label="Attach files">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button id="model-pill" class="model-pill" title="Choose model">loading… <span class="caret">▾</span></button>
+          <label class="variant-wrap" title="Reasoning effort">
+            <span class="variant-label">Reasoning</span>
+            <select id="variant-select"><option value="">default</option></select>
+          </label>
+          <button id="access-pill" class="access-pill" title="Tool access mode">Ask mode</button>
+        </div>
+        <button id="stop-btn" class="stop-btn hidden" title="Stop Luna's current request" aria-label="Stop">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+          Stop
+        </button>
+        <button id="send" class="primary">Send</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="profile-pop" class="profile-pop hidden" role="dialog" aria-label="Your account">
+    <div class="pp-head">
+      <img id="pp-avatar" class="pp-avatar" alt="avatar" />
+      <div>
+        <div id="pp-global" class="pp-global">—</div>
+        <div id="pp-user" class="pp-user">@—</div>
+      </div>
+    </div>
+    <div class="pp-row"><span class="pp-label">Discord ID</span><span id="pp-id" class="pp-value mono">—</span></div>
+    <div class="pp-row"><span class="pp-label">Luna account</span><span id="pp-luna" class="pp-value">—</span></div>
+    <button id="profile-logout" class="danger pp-logout">Log out</button>
+  </div>
+
+  <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h2>Settings</h2>
+      <p class="muted">Your credentials are stored locally on this PC only — Luna sends them nowhere except the providers you configure them for.</p>
+      <label>Provider ID <input id="provider-id" type="text" placeholder="anthropic" autocomplete="off" spellcheck="false" /></label>
+      <label>API key <input id="provider-key" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" /></label>
+      <label>System prompt (optional) <textarea id="system-prompt" rows="4" placeholder="You are Luna — a blunt, senior engineer. Answer directly and completely, no filler, no moralizing. Get to the code."></textarea></label>
+      <div class="themes-section">
+        <div class="access-title">Themes</div>
+        <div id="theme-grid" class="theme-grid"></div>
+      </div>
+
+      <div class="access-group" role="radiogroup" aria-label="Tool access mode">
+        <div class="access-title">Tool access mode (new chats)</div>
+        <label class="row"><input type="radio" name="access-mode" value="ask" /><span><strong>Ask</strong> — Luna asks before every tool call (recommended)</span></label>
+        <label class="row"><input type="radio" name="access-mode" value="default" /><span><strong>Default</strong> — Luna's built-in permission rules</span></label>
+        <label class="row"><input type="radio" name="access-mode" value="unrestricted" /><span><strong>Unrestricted</strong> — every tool auto-allowed: Luna edits files and runs commands without asking. Throwaway/trusted projects only.</span></label>
+      </div>
+      <div class="app-about">
+        <div class="app-about-row"><span>App</span><span id="app-version">Luna —</span></div>
+        <div class="app-about-row"><span>Updates</span><span id="update-status" class="muted">not checked yet</span></div>
+        <button id="check-updates" class="ghost">Check for updates now</button>
+      </div>
+
+      <div class="modal-actions">
+        <button id="sign-out" class="danger">Log out</button>
+        <button id="save-settings" class="primary">Save</button>
+        <button id="close-settings" class="ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="session-context-menu" class="context-menu hidden" role="menu" aria-label="Conversation actions">
+    <button id="ctx-delete" role="menuitem">Delete conversation</button>
+  </div>
+
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Delete conversation?">
+    <div class="modal-card narrow">
+      <h2>Delete conversation?</h2>
+      <p id="confirm-text" class="muted"></p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="ghost">Cancel</button>
+        <button id="confirm-ok" class="danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="permission-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h2 id="permission-title">📁 Folder access</h2>
+      <p id="permission-text"></p>
+      <pre id="permission-detail" class="provider-list"></pre>
+      <div class="modal-actions">
+        <button id="perm-once" class="primary">Just this time</button>
+        <button id="perm-always" class="ghost">Always</button>
+        <button id="perm-reject" class="danger">Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
